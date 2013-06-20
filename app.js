@@ -1,7 +1,13 @@
+/* Some templating utilities
+---------------------------------------------*/
 rivets.binders.height = function(el, value) {
   el.style.height = value + 'px'
 }
 
+/* Counter Device. Extends TimedAggregator to increment 'count' property of passed struct
+
+https://github.com/ismasan/plumber.js/blob/master/src/devices/timed_aggregator.js
+---------------------------------------------*/
 var Counter = Plumber.Devices.TimedAggregator.extend({
   startValues: {
     count: 0
@@ -14,6 +20,13 @@ var Counter = Plumber.Devices.TimedAggregator.extend({
   }
 })
 
+/* Factory funtion for a "capped view" that holds a limited number of DOM nodes at a time.
+
+A capped view is composed of a capped index that pipes to a normal Rivets view.
+
+https://github.com/ismasan/plumber.js/blob/master/src/devices/capped_index.js
+https://github.com/ismasan/plumber.js/blob/master/src/view/view.js
+---------------------------------------------*/
 function cappedView($e, limit) {
   var index = new Plumber.Devices.CappedIndex(limit)
   var view = new Plumber.View($e)
@@ -29,6 +42,10 @@ var COLORS = {
   product: '#C7E1BA'
 }
 
+/* Factory funtion for a pie chart view using piety.js
+
+http://benpickles.github.io/peity/
+---------------------------------------------*/
 function pieView($e, delay) {
   var counter = new Counter(delay)
   
@@ -55,60 +72,57 @@ function pieView($e, delay) {
 
 
 
+////////////////////////////////////////////////////////////////////
+// APPLICATION
+////////////////////////////////////////////////////////////////////
 
+/* Use the primitives above to compose demo dashboard application
+---------------------------------------------*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-////////////////////////////////////////////////////
-
+/* A central capped index to hold all of our incoming data.
+-------------------------------------------------------------*/
 var index = new Plumber.Devices.CappedIndex()
 
+/* A mock data stream that implements the Pipe interface.
+It could be an Ajax poller, a WebSocket, etc.
+-------------------------------------------------------------*/
 var stream = new MockStream()
 
+/* This view shows all incoming data using a capped, rolling view
+-------------------------------------------------------------*/
 var allView = cappedView($('#all'), 24)
 
-var filter1 = cappedView($('#filter1'), 10)
-var filter2 = cappedView($('#filter2'), 10)
+/* A couple of rolling views of 10 elements each
+-------------------------------------------------------------*/
+var filteredView1 = cappedView($('#filter1'), 10)
+var filteredView2 = cappedView($('#filter2'), 10)
 
-// stream.on('add', function(i){
-//   console.log('add', i)
-// })
-
-var detailView = cappedView($('#detail'), 1)
-
+/* A router that routes pageviews and orders to different rolling views
+This is how you model conditional logic as pluggable components.
+-------------------------------------------------------------*/
 var eventsRouter = new Plumber.Devices.Router()
-    .route(filter1, function (struct, promise) {
+    .route(filteredView1, function (struct, promise) {
       if(struct.get('type') == 'pageview') promise.resolve()
       else promise.reject()
     })
-    .route(filter2, function (struct, promise) {
+    .route(filteredView2, function (struct, promise) {
       if(struct.get('type') == 'order') promise.resolve()
       else promise.reject()
     })
 
-filter1.pipe(new Counter(200)).pipe(cappedView($('#counter1'), 84))
-filter2.pipe(new Counter(200)).pipe(cappedView($('#counter2'), 84))
+/* Activity bar charts for filtered views.
+Each real time bar chart is made by piping a capped view to a counter aggregator to another capped view.
+-------------------------------------------------------------*/
+filteredView1.pipe(new Counter(200)).pipe(cappedView($('#counter1'), 84))
+filteredView2.pipe(new Counter(200)).pipe(cappedView($('#counter2'), 84))
 
+/* The totals view aggregates totals for each event type
+-------------------------------------------------------------*/
 var totals = pieView($('#pie'), 500)
 
 totals.pipe(cappedView($('#totals'), 1))
 
+/* Use a ventilator to forward 1 or more data streams to all devices.
+-------------------------------------------------------------*/
 new Plumber.Devices.Ventilator(stream, [allView, eventsRouter, totals])
 
