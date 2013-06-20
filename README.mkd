@@ -1,3 +1,5 @@
 # Plumber.js demo app.
 
 https://github.com/ismasan/plumber.js
+
+See it running: http://plumberjs-demo.s3-website-us-east-1.amazonaws.com/
