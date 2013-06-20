@@ -21,14 +21,21 @@ var MockStream = (function () {
     run: function (milli, times, c) {
       c = c || 1
       var self = this;
-      setTimeout(function () {
+      this.running = true
+      this.__interval = setTimeout(function () {
         self.add(new Plumber.Struct(getEvent()))
-        if(c < times) {
+        if(!times || c < times) {
           ++c
           self.run(milli, times, c++)
         }
         
       }, milli)
+    },
+    
+    stop: function () {
+      clearTimeout(this.__interval)
+      this.running = false
+      return this
     },
     
     _add: function (item, promise) {
