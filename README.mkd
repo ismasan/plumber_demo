@@ -3,3 +3,6 @@
 https://github.com/ismasan/plumber.js
 
 See it running: http://plumberjs-demo.s3-website-us-east-1.amazonaws.com/
+
+
+Example app in [/ismasan/plumber_demo/blob/master/app.js](https://github.com/ismasan/plumber_demo/blob/master/app.js)
