@@ -1,11 +1,26 @@
+/* Moch event stream
+
+This could be a websocket wrapper.
+
+Usage:
+
+    var stream = new MockStream()
+    stream.pipe(someOtherPipeOrView)
+    
+    stream.run(milliseconds) // generate a new event struct every x milliseconds
+-----------------------------------------------------*/
 var MockStream = (function () {
   
+  /* Random data points
+  ---------------------------------------*/
   var apps = ['bootic_sites', 'bootic_api', 'bootic_admin', 'app1', 'app2', 'app3', 'app3']
   var accounts = ['account1', 'account2', 'account3', 'account4']
   var types = ['pageview', 'pageview', 'pageview', 'request', 'login', 'order', 'product']
   var descs = ["Lorem ipsum dolor", "dolor ipsum lorem", "foobar bar foo"]
   var users = ['John', 'Jane', 'Jim', 'Jake']
   
+  /* Generate a random event
+  ------------------------------------------*/
   function getEvent () {
     return {
       app: apps[Math.ceil(Math.random() * apps.length) - 1],
@@ -17,6 +32,8 @@ var MockStream = (function () {
     }
   }
   
+  /* Mock stream Pipe
+  ------------------------------------*/
   var MockStream = Plumber.Pipe.extend({
     run: function (milli, times, c) {
       c = c || 1
